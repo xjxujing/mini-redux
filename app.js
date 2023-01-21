@@ -10,7 +10,7 @@ const App = () => {
   return (
     <AppContext.Provider value={contextValue}>
       <UserInfo></UserInfo>
-      <Wrapper></Wrapper>
+      <NewUserModifier></NewUserModifier>
     </AppContext.Provider>
   );
 };
@@ -29,16 +29,19 @@ const reducer = (oldState, { type, payload }) => {
   }
 };
 
-const Wrapper = () => {
-  const { appState, setAppState } = React.useContext(AppContext);
+const createWrapper = (Component) => {
+  const Wrapper = () => {
+    const { appState, setAppState } = React.useContext(AppContext);
 
-  const dispatch = (action) => {
-    // 借助 Wrapper，在 Wrapper 里面使用 useContext 拿到 state 和 setSate
-    setAppState(reducer(appState, action));
+    const dispatch = (action) => {
+      // 借助 Wrapper，在 Wrapper 里面使用 useContext 拿到 state 和 setSate
+      setAppState(reducer(appState, action));
+    };
+
+    // dispatch 和 state 通过 props 传递
+    return <Component dispatch={dispatch} state={appState}></Component>;
   };
-
-  // dispatch 和 state 通过 props 传递
-  return <UserModifier dispatch={dispatch} state={appState}></UserModifier>;
+  return Wrapper;
 };
 
 const UserInfo = () => {
@@ -55,6 +58,8 @@ const UserModifier = ({ dispatch, state }) => {
   };
   return <input value={state.user.name} onChange={onChange}></input>;
 };
+
+const NewUserModifier = createWrapper(UserModifier);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(React.createElement(App));
