@@ -10,7 +10,7 @@ const App = () => {
   return (
     <AppContext.Provider value={contextValue}>
       <UserInfo></UserInfo>
-      <NewUserModifier></NewUserModifier>
+      <UserModifier id="6789">children content</UserModifier>
     </AppContext.Provider>
   );
 };
@@ -29,17 +29,16 @@ const reducer = (oldState, { type, payload }) => {
   }
 };
 
-const createWrapper = (Component) => {
-  const Wrapper = () => {
+const connect = (Component) => {
+  const Wrapper = (props) => {
     const { appState, setAppState } = React.useContext(AppContext);
 
     const dispatch = (action) => {
-      // 借助 Wrapper，在 Wrapper 里面使用 useContext 拿到 state 和 setSate
       setAppState(reducer(appState, action));
     };
-
-    // dispatch 和 state 通过 props 传递
-    return <Component dispatch={dispatch} state={appState}></Component>;
+    return (
+      <Component {...props} dispatch={dispatch} state={appState}></Component>
+    );
   };
   return Wrapper;
 };
@@ -49,17 +48,21 @@ const UserInfo = () => {
   return <p>User: {contextValue.appState.user.name}</p>;
 };
 
-const UserModifier = ({ dispatch, state }) => {
+const UserModifier = connect(({ dispatch, state, id, children }) => {
   const onChange = (e) => {
     dispatch({
       type: "updateUser",
       payload: { name: e.target.value },
     });
   };
-  return <input value={state.user.name} onChange={onChange}></input>;
-};
-
-const NewUserModifier = createWrapper(UserModifier);
+  return (
+    <div>
+      <p>{id}</p>
+      <p>{children}</p>
+      <input value={state.user.name} onChange={onChange}></input>
+    </div>
+  );
+});
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(React.createElement(App));
