@@ -10,7 +10,7 @@ const App = () => {
   return (
     <AppContext.Provider value={contextValue}>
       <UserInfo></UserInfo>
-      <UserModifier></UserModifier>
+      <Wrapper></Wrapper>
     </AppContext.Provider>
   );
 };
@@ -29,10 +29,16 @@ const reducer = (oldState, { type, payload }) => {
   }
 };
 
-const dispatch = (action) => {
-  // 提取组件 UserModifier 中的 onChange 中的 setSate 到 dispatch 中
-  // 这时候拿不到 setAppState 和 appState
-  setAppState(reducer(appState, action));
+const Wrapper = () => {
+  const { appState, setAppState } = React.useContext(AppContext);
+
+  const dispatch = (action) => {
+    // 借助 Wrapper，在 Wrapper 里面使用 useContext 拿到 state 和 setSate
+    setAppState(reducer(appState, action));
+  };
+
+  // dispatch 和 state 通过 props 传递
+  return <UserModifier dispatch={dispatch} state={appState}></UserModifier>;
 };
 
 const UserInfo = () => {
@@ -40,20 +46,14 @@ const UserInfo = () => {
   return <p>User: {contextValue.appState.user.name}</p>;
 };
 
-const UserModifier = () => {
-  const contextValue = React.useContext(AppContext);
-
-  const { appState, setAppState } = contextValue;
-
+const UserModifier = ({ dispatch, state }) => {
   const onChange = (e) => {
     dispatch({
       type: "updateUser",
       payload: { name: e.target.value },
     });
   };
-  return (
-    <input value={contextValue.appState.user.name} onChange={onChange}></input>
-  );
+  return <input value={state.user.name} onChange={onChange}></input>;
 };
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
