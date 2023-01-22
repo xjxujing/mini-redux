@@ -1,14 +1,27 @@
 const AppContext = React.createContext(null);
 
-const App = () => {
-  const [appState, setAppState] = React.useState({
+// 2 state 和 setState 移到了外面
+const store = {
+  state: {
     user: { name: "Kitty", age: 2 },
-  });
+  },
+  setState(newState) {
+    // 4 打印可以看到状态已经发生了变化，但是页面没有更新
+    console.log(newState);
+    store.state = newState;
+  },
+};
 
-  const contextValue = { appState, setAppState };
+const App = () => {
+  // 1 把 setAppState 移出去
+  // const [appState, setAppState] = React.useState({
+  //   user: { name: "Kitty", age: 2 },
+  // });
+
+  // const contextValue = { appState, setAppState };
 
   return (
-    <AppContext.Provider value={contextValue}>
+    <AppContext.Provider value={store}>
       <Temp1></Temp1>
       <Temp2></Temp2>
       <Temp3></Temp3>
@@ -32,14 +45,13 @@ const reducer = (oldState, { type, payload }) => {
 
 const connect = (Component) => {
   const Wrapper = (props) => {
-    const { appState, setAppState } = React.useContext(AppContext);
+    // 3 修改相应名字，依然是从 context 中拿到的状态
+    const { state, setState } = React.useContext(AppContext);
 
     const dispatch = (action) => {
-      setAppState(reducer(appState, action));
+      setState(reducer(state, action));
     };
-    return (
-      <Component {...props} dispatch={dispatch} state={appState}></Component>
-    );
+    return <Component {...props} dispatch={dispatch} state={state}></Component>;
   };
   return Wrapper;
 };
@@ -47,8 +59,9 @@ const connect = (Component) => {
 const UserInfo = () => {
   console.log("render UserInfo");
 
-  const contextValue = React.useContext(AppContext);
-  return <p>User: {contextValue.appState.user.name}</p>;
+  // 3 修改相应名字，依然是从 context 中拿到的状态
+  const { state } = React.useContext(AppContext);
+  return <p>User: {state.user.name}</p>;
 };
 
 const UserModifier = connect(({ dispatch, state, id, children }) => {
