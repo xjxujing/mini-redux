@@ -9,8 +9,9 @@ const App = () => {
 
   return (
     <AppContext.Provider value={contextValue}>
-      <UserInfo></UserInfo>
-      <UserModifier id="6789">children content</UserModifier>
+      <Temp1></Temp1>
+      <Temp2></Temp2>
+      <Temp3></Temp3>
     </AppContext.Provider>
   );
 };
@@ -44,6 +45,8 @@ const connect = (Component) => {
 };
 
 const UserInfo = () => {
+  console.log("render UserInfo");
+
   const contextValue = React.useContext(AppContext);
   return <p>User: {contextValue.appState.user.name}</p>;
 };
@@ -55,6 +58,8 @@ const UserModifier = connect(({ dispatch, state, id, children }) => {
       payload: { name: e.target.value },
     });
   };
+
+  console.log("render UserModifier");
   return (
     <div>
       <p>{id}</p>
@@ -63,6 +68,37 @@ const UserModifier = connect(({ dispatch, state, id, children }) => {
     </div>
   );
 });
+
+const Temp1 = () => {
+  console.log("render Temp1");
+
+  return (
+    <section>
+      Temp1 UserInfo:
+      <UserInfo></UserInfo>
+    </section>
+  );
+};
+
+const Temp2 = () => {
+  console.log("render Temp2");
+  return (
+    <section>
+      Temp2 UserModifier:
+      <UserModifier id="this is id from UserModifier's props">
+        this is children content from UserModifier's props
+      </UserModifier>
+    </section>
+  );
+};
+const Temp3 = () => {
+  console.log("render Temp3");
+  return (
+    <section>
+      <p>Temp3</p>
+    </section>
+  );
+};
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(React.createElement(App));
