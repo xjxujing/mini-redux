@@ -10,6 +10,20 @@ const App = () => {
   );
 };
 
+const mapStateToProps = (state) => {
+  return { name: state.user.name };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+  updateUserName: (attrs) => {
+    dispatch({ type: "updateUser", payload: attrs });
+  },
+});
+
+// connect 统一管理了 读 （得到 state）和 写 (派发 action)
+// 再传一个组件即可
+const connectToUserName = connect(mapStateToProps, mapDispatchToProps);
+
 const UserInfo = connect((state) => {
   return { name: state.user.name };
 })(({ name }) => {
@@ -24,30 +38,23 @@ const UserInfo2 = connect((state) => {
   return <p>User: {age}</p>;
 });
 
-const UserModifier = connect(
-  (state) => {
-    return { name: state.user.name };
-  },
-  (dispatch) => ({
-    updateUserName: (attrs) => {
-      dispatch({ type: "updateUser", payload: attrs });
-    },
-  })
-)(({ updateUserName, name, id, children }) => {
-  console.log("render UserModifier");
+const UserModifier = connectToUserName(
+  ({ updateUserName, name, id, children }) => {
+    console.log("render UserModifier");
 
-  const onChange = (e) => {
-    updateUserName({ name: e.target.value });
-  };
+    const onChange = (e) => {
+      updateUserName({ name: e.target.value });
+    };
 
-  return (
-    <div>
-      <p>{id}</p>
-      <p>{children}</p>
-      <input value={name} onChange={onChange}></input>
-    </div>
-  );
-});
+    return (
+      <div>
+        <p>{id}</p>
+        <p>{children}</p>
+        <input value={name} onChange={onChange}></input>
+      </div>
+    );
+  }
+);
 
 // 注意 UserModifier2 中, 如果不给 selector, 修改 name 的时候，会导致 UserModifier2 不必要的渲染
 // 因为不给 selector 的时候，UserModifier2 对比的是完整的 state, name 改变了 deepEqual 是 false
