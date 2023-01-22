@@ -35,13 +35,21 @@ const reducer = (oldState, { type, payload }) => {
   }
 };
 
-const connect = (selector) => (Component) => {
+const connect = (selector, dispatchSelector) => (Component) => {
   const Wrapper = (props) => {
     const { state, setState } = store;
+
+    const dispatch = (action) => {
+      setState(reducer(state, action));
+    };
 
     const [, update] = React.useState({});
 
     const data = selector ? selector(state) : { state };
+
+    const dispatcher = dispatchSelector
+      ? dispatchSelector(dispatch)
+      : { dispatch };
 
     React.useEffect(() => {
       const unsubscribe = store.subscribe(() => {
@@ -58,11 +66,7 @@ const connect = (selector) => (Component) => {
       return unsubscribe;
     }, [selector]);
 
-    const dispatch = (action) => {
-      setState(reducer(state, action));
-    };
-
-    return <Component {...props} {...data} dispatch={dispatch}></Component>;
+    return <Component {...props} {...data} {...dispatcher}></Component>;
   };
   return Wrapper;
 };

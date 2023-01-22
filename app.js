@@ -24,16 +24,20 @@ const UserInfo2 = connect((state) => {
   return <p>User: {age}</p>;
 });
 
-const UserModifier = connect((state) => {
-  return { name: state.user.name };
-})(({ dispatch, name, id, children }) => {
+const UserModifier = connect(
+  (state) => {
+    return { name: state.user.name };
+  },
+  (dispatch) => ({
+    updateUserName: (attrs) => {
+      dispatch({ type: "updateUser", payload: attrs });
+    },
+  })
+)(({ updateUserName, name, id, children }) => {
   console.log("render UserModifier");
 
   const onChange = (e) => {
-    dispatch({
-      type: "updateUser",
-      payload: { name: e.target.value },
-    });
+    updateUserName({ name: e.target.value });
   };
 
   return (
