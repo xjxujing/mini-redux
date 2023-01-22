@@ -89,3 +89,7 @@ const deepEqual = (x, y) => {
     return false;
   }
 };
+
+const Provider = ({ store, children }) => {
+  return <AppContext.Provider value={store}>{children}</AppContext.Provider>;
+};

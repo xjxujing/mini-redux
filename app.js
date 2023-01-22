@@ -1,12 +1,12 @@
 const App = () => {
   return (
-    <AppContext.Provider value={store}>
+    <Provider store={store}>
       <Temp1></Temp1>
       <Temp2></Temp2>
       <Temp3></Temp3>
       <Temp4></Temp4>
       <Temp5></Temp5>
-    </AppContext.Provider>
+    </Provider>
   );
 };
 
