@@ -49,7 +49,7 @@ const UserModifier = connect((state) => {
 // 因为不给 selector 的时候，UserModifier2 对比的是完整的 state, name 改变了 deepEqual 是 false
 const UserModifier2 = connect((state) => {
   return { age: state.user.age };
-})(({ dispatch, state, id, children }) => {
+})(({ dispatch, age, id, children }) => {
   console.log("render UserModifier2");
 
   const onChange = (e) => {
@@ -63,7 +63,7 @@ const UserModifier2 = connect((state) => {
     <div>
       <p>{id}</p>
       <p>{children}</p>
-      <input value={state.user.age} onChange={onChange}></input>
+      <input value={age} onChange={onChange}></input>
     </div>
   );
 });

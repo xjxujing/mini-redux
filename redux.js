@@ -40,6 +40,7 @@ const connect = (selector) => (Component) => {
     const { state, setState } = store;
 
     const [, update] = React.useState({});
+
     const data = selector ? selector(state) : { state };
 
     React.useEffect(() => {
@@ -60,14 +61,8 @@ const connect = (selector) => (Component) => {
     const dispatch = (action) => {
       setState(reducer(state, action));
     };
-    return (
-      <Component
-        {...props}
-        {...data}
-        dispatch={dispatch}
-        state={state}
-      ></Component>
-    );
+
+    return <Component {...props} {...data} dispatch={dispatch}></Component>;
   };
   return Wrapper;
 };
