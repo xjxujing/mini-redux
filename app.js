@@ -2,7 +2,8 @@ const AppContext = React.createContext(null);
 
 const store = {
   state: {
-    user: { name: "Kitty", age: 2 },
+    user: { name: "Kitty", age: "2" },
+    group: "前端",
   },
   setState(newState) {
     store.state = newState;
@@ -26,6 +27,7 @@ const App = () => {
       <Temp2></Temp2>
       <Temp3></Temp3>
       <Temp4></Temp4>
+      <Temp5></Temp5>
     </AppContext.Provider>
   );
 };
@@ -45,38 +47,87 @@ const reducer = (oldState, { type, payload }) => {
   }
 };
 
-const connect = (Component) => {
+const deepEqual = (x, y) => {
+  if (x === y) {
+    return true;
+  } else if (
+    typeof x == "object" &&
+    x != null &&
+    typeof y == "object" &&
+    y != null
+  ) {
+    if (Object.keys(x).length !== Object.keys(y).length) {
+      return false;
+    }
+    for (var prop in x) {
+      if (y.hasOwnProperty(prop)) {
+        if (!deepEqual(x[prop], y[prop])) return false;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  } else {
+    return false;
+  }
+};
+
+const connect = (selector) => (Component) => {
   const Wrapper = (props) => {
-    // store 也可以从 context 里面拿
-    const { state, setState } = React.useContext(AppContext);
+    const { state, setState } = store;
 
     const [, update] = React.useState({});
+    const data = selector ? selector(state) : { state };
+
     React.useEffect(() => {
-      store.subscribe(() => {
-        console.log("update");
-        update({});
+      const unsubscribe = store.subscribe(() => {
+        const newData = selector
+          ? selector(store.state)
+          : { state: store.state };
+
+        console.log("data: ", data);
+        console.log("newData: ", newData);
+        if (!deepEqual(data, newData)) {
+          update({});
+        }
       });
-    }, []);
+      return unsubscribe;
+    }, [selector]);
 
     const dispatch = (action) => {
       setState(reducer(state, action));
     };
-    return <Component {...props} dispatch={dispatch} state={state}></Component>;
+    return (
+      <Component
+        {...props}
+        {...data}
+        dispatch={dispatch}
+        state={state}
+      ></Component>
+    );
   };
   return Wrapper;
 };
 
-const UserInfo = connect(({ state }) => {
+const UserInfo = connect((state) => {
+  return { name: state.user.name };
+})(({ name }) => {
   console.log("render UserInfo");
-  return <p>User: {state.user.name}</p>;
+  return <p>User: {name}</p>;
 });
 
-const UserInfo2 = connect(({ state }) => {
+const UserInfo2 = connect((state) => {
+  return { age: state.user.age };
+})(({ age }) => {
   console.log("render UserInfo2");
-  return <p>User: {state.user.age}</p>;
+  return <p>User: {age}</p>;
 });
 
-const UserModifier = connect(({ dispatch, state, id, children }) => {
+const UserModifier = connect((state) => {
+  return { name: state.user.name };
+})(({ dispatch, name, id, children }) => {
+  console.log("render UserModifier");
+
   const onChange = (e) => {
     dispatch({
       type: "updateUser",
@@ -84,17 +135,22 @@ const UserModifier = connect(({ dispatch, state, id, children }) => {
     });
   };
 
-  console.log("render UserModifier");
   return (
     <div>
       <p>{id}</p>
       <p>{children}</p>
-      <input value={state.user.name} onChange={onChange}></input>
+      <input value={name} onChange={onChange}></input>
     </div>
   );
 });
 
-const UserModifier2 = connect(({ dispatch, state, id, children }) => {
+// 注意 UserModifier2 中, 如果不给 selector, 修改 name 的时候，会导致 UserModifier2 不必要的渲染
+// 因为不给 selector 的时候，UserModifier2 对比的是完整的 state, name 改变了 deepEqual 是 false
+const UserModifier2 = connect((state) => {
+  return { age: state.user.age };
+})(({ dispatch, state, id, children }) => {
+  console.log("render UserModifier2");
+
   const onChange = (e) => {
     dispatch({
       type: "updateUser",
@@ -102,7 +158,6 @@ const UserModifier2 = connect(({ dispatch, state, id, children }) => {
     });
   };
 
-  console.log("render UserModifier2");
   return (
     <div>
       <p>{id}</p>
@@ -135,7 +190,6 @@ const Temp2 = () => {
   );
 };
 
-// 注意 state 变化，Temp3 和 Temp4 依然会渲染
 const Temp3 = () => {
   console.log("render Temp3");
   return (
@@ -155,6 +209,17 @@ const Temp4 = () => {
     </section>
   );
 };
+
+const Temp5 = connect((state) => {
+  return { group: state.group };
+})(({ group }) => {
+  console.log("render Temp5");
+  return (
+    <section>
+      <p>Temp5: group: {group}</p>
+    </section>
+  );
+});
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(React.createElement(App));
