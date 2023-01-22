@@ -10,6 +10,27 @@ const App = () => {
   );
 };
 
+const initState = {
+  user: { name: "Kitty", age: "2" },
+  group: "前端",
+};
+
+const reducer = (oldState, { type, payload }) => {
+  if (type === "updateUser") {
+    const newState = {
+      ...oldState,
+      user: {
+        ...oldState.user,
+        ...payload,
+      },
+    };
+    return newState;
+  } else {
+    return state;
+  }
+};
+const store = createStore(reducer, initState);
+
 const mapStateToProps = (state) => {
   return { name: state.user.name };
 };

@@ -1,10 +1,8 @@
 const AppContext = React.createContext(null);
 
 const store = {
-  state: {
-    user: { name: "Kitty", age: "2" },
-    group: "前端",
-  },
+  state: undefined,
+  reducer: undefined,
   setState(newState) {
     store.state = newState;
     // setState 会调用 fn ( 也就是 connect 里面传的 update ）
@@ -20,27 +18,20 @@ const store = {
   },
 };
 
-const reducer = (oldState, { type, payload }) => {
-  if (type === "updateUser") {
-    const newState = {
-      ...oldState,
-      user: {
-        ...oldState.user,
-        ...payload,
-      },
-    };
-    return newState;
-  } else {
-    return state;
-  }
+const createStore = (reducer, initState) => {
+  store.state = initState;
+  store.reducer = reducer;
+  return store;
 };
 
 const connect = (selector, dispatchSelector) => (Component) => {
   const Wrapper = (props) => {
     const { state, setState } = store;
+    // 这里只会在初始化的时候打印
+    // console.log("outside: ", store.state.user.name);
 
     const dispatch = (action) => {
-      setState(reducer(state, action));
+      setState(store.reducer(state, action));
     };
 
     const [, update] = React.useState({});
@@ -53,6 +44,9 @@ const connect = (selector, dispatchSelector) => (Component) => {
 
     React.useEffect(() => {
       const unsubscribe = store.subscribe(() => {
+        // 这里直接用 state, 页面不会更新，需要用 store 里面最新的 state 值
+        // useEffect 在第一次渲染之后和每次更新之后都会执行
+        // console.log("inside", store.state.user.name);
         const newData = selector
           ? selector(store.state)
           : { state: store.state };
@@ -64,7 +58,7 @@ const connect = (selector, dispatchSelector) => (Component) => {
         }
       });
       return unsubscribe;
-    }, [selector]);
+    }, []);
 
     return <Component {...props} {...data} {...dispatcher}></Component>;
   };
