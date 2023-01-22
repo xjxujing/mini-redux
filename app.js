@@ -5,8 +5,17 @@ const store = {
     user: { name: "Kitty", age: 2 },
   },
   setState(newState) {
-    console.log(newState);
     store.state = newState;
+    // setState 会调用 fn ( 也就是 connect 里面传的 update ）
+    store.listeners.map((fn) => fn(store.state));
+  },
+  listeners: [],
+  subscribe(fn) {
+    store.listeners.push(fn);
+    return () => {
+      const index = store.listeners.findIndex(fn);
+      store.listeners.splice(index, 1);
+    };
   },
 };
 
@@ -16,19 +25,21 @@ const App = () => {
       <Temp1></Temp1>
       <Temp2></Temp2>
       <Temp3></Temp3>
+      <Temp4></Temp4>
     </AppContext.Provider>
   );
 };
 
 const reducer = (oldState, { type, payload }) => {
   if (type === "updateUser") {
-    return {
+    const newState = {
       ...oldState,
       user: {
         ...oldState.user,
         ...payload,
       },
     };
+    return newState;
   } else {
     return state;
   }
@@ -36,25 +47,34 @@ const reducer = (oldState, { type, payload }) => {
 
 const connect = (Component) => {
   const Wrapper = (props) => {
+    // store 也可以从 context 里面拿
     const { state, setState } = React.useContext(AppContext);
+
     const [, update] = React.useState({});
+    React.useEffect(() => {
+      store.subscribe(() => {
+        console.log("update");
+        update({});
+      });
+    }, []);
 
     const dispatch = (action) => {
       setState(reducer(state, action));
-      update({});
     };
-
     return <Component {...props} dispatch={dispatch} state={state}></Component>;
   };
   return Wrapper;
 };
 
-const UserInfo = () => {
+const UserInfo = connect(({ state }) => {
   console.log("render UserInfo");
-
-  const { state } = React.useContext(AppContext);
   return <p>User: {state.user.name}</p>;
-};
+});
+
+const UserInfo2 = connect(({ state }) => {
+  console.log("render UserInfo2");
+  return <p>User: {state.user.age}</p>;
+});
 
 const UserModifier = connect(({ dispatch, state, id, children }) => {
   const onChange = (e) => {
@@ -70,6 +90,24 @@ const UserModifier = connect(({ dispatch, state, id, children }) => {
       <p>{id}</p>
       <p>{children}</p>
       <input value={state.user.name} onChange={onChange}></input>
+    </div>
+  );
+});
+
+const UserModifier2 = connect(({ dispatch, state, id, children }) => {
+  const onChange = (e) => {
+    dispatch({
+      type: "updateUser",
+      payload: { age: e.target.value },
+    });
+  };
+
+  console.log("render UserModifier2");
+  return (
+    <div>
+      <p>{id}</p>
+      <p>{children}</p>
+      <input value={state.user.age} onChange={onChange}></input>
     </div>
   );
 });
@@ -96,11 +134,24 @@ const Temp2 = () => {
     </section>
   );
 };
+
+// 注意 state 变化，Temp3 和 Temp4 依然会渲染
 const Temp3 = () => {
   console.log("render Temp3");
   return (
     <section>
-      <p>Temp3</p>
+      <p>Temp3 UserModifier2:</p>
+      <UserModifier2></UserModifier2>
+    </section>
+  );
+};
+
+const Temp4 = () => {
+  console.log("render Temp4");
+  return (
+    <section>
+      <p>Temp4 UserInfo2</p>
+      <UserInfo2></UserInfo2>
     </section>
   );
 };
